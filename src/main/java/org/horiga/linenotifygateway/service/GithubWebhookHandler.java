@@ -53,12 +53,17 @@ public class GithubWebhookHandler extends WebhookHandler {
         final String accessToken = StringUtils.isNotBlank(request.getParameter("notify_token")) ?
                              request.getParameter("notify_token") : this.accessToken;
         if (StringUtils.isNotBlank(accessToken)) {
-            Notify notify = new Notify("github", buildMessage(event, message, request), "", "");
-            notifyService.execute(applySticker(event, message, notify),
-                                  Splitter.on(",")
-                                          .omitEmptyStrings()
-                                          .trimResults()
-                                          .splitToList(accessToken));
+
+            if (("pull_request".equalsIgnoreCase(event) && "opened".equals(message.getOrDefault("action", "NONE"))) ||
+                ("pull_request_review".equalsIgnoreCase(event) && "submitted".equals(message.getOrDefault("action", "NONE")))) {
+
+                Notify notify = new Notify("github", buildMessage(event, message, request), "", "");
+                notifyService.execute(applySticker(event, message, notify),
+                                      Splitter.on(",")
+                                              .omitEmptyStrings()
+                                              .trimResults()
+                                              .splitToList(accessToken));
+            }
         }
     }
 
@@ -68,18 +73,18 @@ public class GithubWebhookHandler extends WebhookHandler {
 
     protected Notify applySticker(String event, Map<String, Object> message, Notify notify) {
 
-        if(message.containsKey("_sticker")) {
-            return notify.addSticker((String)message.get("_sticker"));
-        }
-
-        if ("pull_request".equals(event)
-            && "opened".equals(message.getOrDefault("action", "NONE"))) {
-            return notify.addSticker("1,106");
-        }
-
-        if ("release".equals(event)) {
-            return notify.addSticker("2,144");
-        }
+//        if(message.containsKey("_sticker")) {
+//            return notify.addSticker((String)message.get("_sticker"));
+//        }
+//
+//        if ("pull_request".equals(event)
+//            && "opened".equals(message.getOrDefault("action", "NONE"))) {
+//            return notify.addSticker("1,106");
+//        }
+//
+//        if ("release".equals(event)) {
+//            return notify.addSticker("2,144");
+//        }
 
         return notify;
     }
